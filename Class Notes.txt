@@ -1,0 +1,12 @@
+Intro to Game Programming 9/9 - 9/14
+
+Graphics in Games
+
+All things are triangles
+
+Orthographic Projection for 2D games
+	Projection is a box
+
+Perspective Projection for 3D
+	Projection is a trapezoid
+
