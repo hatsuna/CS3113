@@ -87,6 +87,7 @@ void DrawSprite(GLint texture, float x, float y, float rotation){
 
 	//Disables a vertex attribute array
 	glDisableVertexAttribArray(program.positionAttribute);
+	glDisableVertexAttribArray(program.texCoordAttribute);
 }
 
 int main(int argc, char *argv[])
@@ -134,18 +135,8 @@ int main(int argc, char *argv[])
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		angle += elapsed;
-/*		modelMatrix.identity();
-		modelMatrix.Rotate(angle);
-		modelMatrix.Translate(1.0f, 0.0f, 0.0f);
-		
-		//Pass the matrices to our program
-		program.setModelMatrix(modelMatrix);
-		program.setProjectionMatrix(projectionMatrix);
-		program.setViewMatrix(viewMatrix);
-
-		//Use the specified program id
-		glUseProgram(program.programID);
-	*/	DrawSprite(shipTexture, 1.0f, 0.0f, angle);
+	
+		DrawSprite(shipTexture, 1.0f, 0.0f, angle);
 		DrawSprite(asteroidTexture, 1.5f, 1.0f, 0.0f);
 		DrawSprite(ufoTexture, -2.4f, -1.4f, 0.0f);
 
