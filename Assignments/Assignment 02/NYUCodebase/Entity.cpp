@@ -44,29 +44,22 @@ Entity::Entity(const char *image_path){
 
 }
 
-void Entity::Update(float x_pos, float y_pos, float rot){
-	x = x_pos;
-	y = y_pos;
-	rotation = rot;
-}
-
 void Entity::Draw(){
 	
 }
 
 void Entity::DrawSprite(){
-	/*
-	Set position attributes for 2 triangles.
-	Set texture coordinate attributes for 2 triangles.
-	Bind the texture we want to use.
-	Draw arrays.
-	Disable attribute arrays.
-	*/
+	// Set position attributes for 2 triangles.
+	// Set texture coordinate attributes for 2 triangles.
+	// Bind the texture we want to use.
+	// Draw arrays.
+	// Disable attribute arrays.
 	
 	projectionMatrix.setOrthoProjection(-3.55f, 3.55f, -2.0f, 2.0f, -1.0f, 1.0f);
 	modelMatrix.identity();
-	modelMatrix.Rotate(rotation);
 	modelMatrix.Translate(x, y, 0.0f);
+	modelMatrix.Rotate(rotation);
+	
 
 	//Pass the matrices to our program
 	program->setModelMatrix(modelMatrix);
@@ -77,7 +70,7 @@ void Entity::DrawSprite(){
 	glUseProgram(program->programID);
 
 	//Defines an array of vertex data (counter-clockwise!)
-	float vertices[] = { 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f };
+	float vertices[] = { width, height, -width, height, -width, -height, -width, -height, width, -height, width, height };
 	glVertexAttribPointer(program->positionAttribute, 2, GL_FLOAT, false, 0, vertices);
 	//Enables a vertex attribute array
 	glEnableVertexAttribArray(program->positionAttribute);

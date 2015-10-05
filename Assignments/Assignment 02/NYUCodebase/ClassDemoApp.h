@@ -18,6 +18,13 @@
 	#define RESOURCE_FOLDER "NYUCodebase.app/Contents/Resources/"
 #endif
 
+// 60 FPS (1.0f / 60.0f)
+#define FIXED_TIMESTEP 0.01666666f
+#define MAX_TIMESTEPS 6
+
+#define WINDOW_WIDTH = 640;
+#define WINDOW_HEIGHT = 480;
+
 class ClassDemoApp {
 	public:
 		ClassDemoApp(); 
@@ -29,32 +36,24 @@ class ClassDemoApp {
 	
 		void Render(); 
 		void Update(float elapsed);
-
-		/*incorporate into Entity class
-		GLuint LoadTexture(const char *image_path);
-		void DrawSprite(GLint texture, float x, float y, float rotation);
-		*/
+		void FixedUpdate(float elapsed);
 
 	private:
 		bool done;
 		SDL_Event event;
-		float lastFrameTicks; 
+		float lastFrameTicks;
+		float timeLeftOver;
 		SDL_Window* displayWindow;
 
 		SDL_Joystick* joystick;
 		SDL_GLContext context;
 
-		/* in entity code
-		Matrix projectionMatrix;
-		Matrix modelMatrix;
-		Matrix viewMatrix;
-		
-		ShaderProgram* program;
-		*/
-
 		Entity ship;
 		Entity asteroid;
 		Entity ufo;
+
+		Entity player1;
+		Entity player2;
 
 		float xDir;
 		float yDir;

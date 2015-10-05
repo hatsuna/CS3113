@@ -22,7 +22,6 @@ class Entity {
 		Entity();
 		Entity(const char *image_path);
 
-		void Update(float x_pos, float y_pos, float rot);
 		void Draw();
 		void DrawSprite();
 
