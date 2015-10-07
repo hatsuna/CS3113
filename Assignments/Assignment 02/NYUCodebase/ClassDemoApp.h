@@ -54,6 +54,7 @@ class ClassDemoApp {
 
 		Entity player1;
 		Entity player2;
+		Entity ball;
 
 		float xDir;
 		float yDir;
