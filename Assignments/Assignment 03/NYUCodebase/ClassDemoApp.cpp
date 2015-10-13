@@ -22,6 +22,8 @@ Player 2: Up + Down
 
 
 // CTRL+F WIP or Assignment # for unimplemented code
+// Assignment 04 WIP
+// memcpy(array, array, arraysize) to copy one array to another
 
 ClassDemoApp::ClassDemoApp() {
 	Setup();
@@ -73,6 +75,7 @@ void ClassDemoApp::Setup(){
 
 	// Assignment 04 WIP
 	// When adding a character spritesheet, divide by sheet size
+	// spriteSheetTexture = LoadTexture("sheet.png");
 	// player.sprite = SheetSprite(spriteSheetTexture, 67.0f / 512.0f, ... )
 	//When setting collision, sprite and collision box might not need to be the same
 
