@@ -12,6 +12,7 @@
 #include "Matrix.h"
 #include "Entity.h"
 
+
 #ifdef _WINDOWS
 	#define RESOURCE_FOLDER ""
 #else

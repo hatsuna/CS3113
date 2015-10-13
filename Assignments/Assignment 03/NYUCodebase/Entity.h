@@ -29,6 +29,17 @@ class Entity {
 
 		void Draw();
 		void DrawSprite();
+		void DrawSpriteSheetSprite(int index, int spriteCountX, int spriteCountY);
+		void Animate();
+		void DrawText(int fontTexture, std::string text, float size, float spacing);
+
+		//WIP assignment 03
+		//Animation variables
+		const int runAnimation[] = { 9, 10, 11, 12, 13 };
+		const int numFrames = 5;
+		float animationElapsed = 0.0f;
+		float framesPerSecond = 30.0f;
+		int currentIndex = 0;
 
 		ShaderProgram * program; //delete this
 		//one shaderprogram for one app, pass from app to entity

@@ -4,9 +4,11 @@
  * Matthew Pon
  * CS3113 Assignment 03
  * Space Invaders
- * 
- * 
- * 
+ *	It must have 3 states: 
+		TITLE SCREEN, GAME and GAME OVER 
+	It must display text
+	It must use sprite sheets
+	You can use any graphics you want (it doesn’t have to be in space! :)
  */
 
 /*
@@ -31,7 +33,7 @@ void ClassDemoApp::Setup(){
 
 	joystick = SDL_JoystickOpen(0); // controller support
 
-	displayWindow = SDL_CreateWindow("Assignment 02 Pong - Matthew Pon", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 360, SDL_WINDOW_OPENGL);
+	displayWindow = SDL_CreateWindow("Assignment 03 Space Invaders - Matthew Pon", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 640, 360, SDL_WINDOW_OPENGL);
 	context = SDL_GL_CreateContext(displayWindow);
 	SDL_GL_MakeCurrent(displayWindow, context);	
 	#ifdef _WINDOWS
@@ -123,6 +125,9 @@ void ClassDemoApp::Render() {
 	player1.DrawSprite();
 	player2.DrawSprite();
 	ball.DrawSprite();
+
+	//WIP ASSIGNMENT 03
+	//enemySprite.Draw();
 
 	SDL_GL_SwapWindow(displayWindow);
 }
