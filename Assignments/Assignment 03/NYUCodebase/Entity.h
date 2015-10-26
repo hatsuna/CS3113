@@ -3,20 +3,24 @@
 #ifdef _WINDOWS
 	#include <GL/glew.h>
 #endif
-
-#include <SDL.h>
-#include <SDL_opengl.h>
-#include <SDL_image.h>
-
-#include "ShaderProgram.h"
-#include "Matrix.h"
-//#include "Sheetsprite.h"
-
 #ifdef _WINDOWS
 	#define RESOURCE_FOLDER ""
 #else
 	#define RESOURCE_FOLDER "NYUCodebase.app/Contents/Resources/"
 #endif
+
+#include <SDL.h>
+#include <SDL_opengl.h>
+#include <SDL_image.h>
+#include <vector>
+
+#include "ShaderProgram.h"
+#include "Matrix.h"
+#include "SheetSprite.h"
+
+// 60 FPS (1.0f / 60.0f)
+#define FIXED_TIMESTEP 0.01666666f
+#define MAX_TIMESTEPS 6
 
 // WIP Assignment 
 // enum Entity types
@@ -27,43 +31,55 @@ class Entity {
 		Entity();
 		Entity(const char *image_path);
 
+		GLuint LoadTexture(const char *image_path);
+		
 		void Draw();
 		void DrawSprite();
 		void DrawSpriteSheetSprite(int index, int spriteCountX, int spriteCountY);
 		void Animate();
-		void DrawText(int fontTexture, std::string text, float size, float spacing);
+		
 
-		//WIP assignment 03
-		//Animation variables
-		const int runAnimation[] = { 9, 10, 11, 12, 13 };
+		void Update(float elapsed, std::vector<Entity> entities);
+		void Render();
+		
+		//WIP assignment 04 Animation variables
+		/*
+		const int runAnimation[5] = { 9, 10, 11, 12, 13 };
 		const int numFrames = 5;
 		float animationElapsed = 0.0f;
 		float framesPerSecond = 30.0f;
 		int currentIndex = 0;
+		*/
 
-		ShaderProgram * program; //delete this
+		SheetSprite sprite; // use if sprite is on a sprite sheet
+		GLuint textureID; // use if sprite file is just one sprite
+
 		//one shaderprogram for one app, pass from app to entity
-		
-		//these shouldn't be here either?
-		Matrix projectionMatrix;
+		ShaderProgram * program;
 		Matrix modelMatrix;
-		Matrix viewMatrix;
 
-		float x;
-		float y;
+		float timeLeftOver;
 
 		float rotation;
-
-		GLuint textureID;
-
 		float width;
 		float height;
+		float x;
+		float y;
+		float velocity_x;
+		float velocity_y;
+		float acceleration_x;
+		float acceleration_y;
+		float friction_x;
+		float friction_y;
 
+		//depreciated
 		float speed;
 		float direction_x;
 		float direction_y;
 
-		/*Assignment 04 WIP Additions, need to implement
+
+		//Assignment 04 WIP Additions, need to implement
+		/*
 		void Update(float elapsed);
 		void Render(ShaderProgram * program); // pass shaderprogram
 		bool collidesWith(Entity * entity);

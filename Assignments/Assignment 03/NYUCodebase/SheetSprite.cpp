@@ -19,6 +19,7 @@ void SheetSprite::Draw() {
 		u + width, v + height
 	};
 	float aspect = width / height;
+	//Defines an array of vertex data (counter-clockwise!)
 	float vertices[] = {
 		-0.5f * size * aspect, -0.5f * size, 
 		0.5f * size * aspect, 0.5f * size,
@@ -26,5 +27,20 @@ void SheetSprite::Draw() {
 		0.5f * size * aspect, 0.5f * size, 
 		-0.5f * size * aspect, -0.5f * size, 
 		0.5f * size * aspect, -0.5f * size };
-	// draw our arrays 
+
+	//Use the specified program id
+	glUseProgram(program->programID);
+	glVertexAttribPointer(program->positionAttribute, 2, GL_FLOAT, false, 0, vertices);
+	//Enables a vertex attribute array
+	glEnableVertexAttribArray(program->positionAttribute);
+	glVertexAttribPointer(program->texCoordAttribute, 2, GL_FLOAT, false, 0, texCoords);
+	glEnableVertexAttribArray(program->texCoordAttribute);
+
+	glBindTexture(GL_TEXTURE_2D, textureID);
+	//Render previously defined arrays
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+
+	//Disables a vertex attribute array
+	glDisableVertexAttribArray(program->positionAttribute);
+	glDisableVertexAttribArray(program->texCoordAttribute);
 }

@@ -1,5 +1,4 @@
 #include "ClassDemoApp.h"
-
 /* 
  * Matthew Pon
  * CS3113 Assignment 03
@@ -10,20 +9,41 @@
 	It must use sprite sheets
 	You can use any graphics you want (it doesn’t have to be in space! :)
  */
-
 /*
-
 Controls:
 Press Space to serve
 Player 1: W + S
 Player 2: Up + Down
-
 */
-
-
 // CTRL+F WIP or Assignment # for unimplemented code
 // Assignment 04 WIP
 // memcpy(array, array, arraysize) to copy one array to another
+
+
+// Todo?
+// Finish Bullet class
+// Bullet Management
+// entity types
+// enemy implementation
+// Game states
+
+class Bullet{
+public:
+	Bullet(){
+
+	}
+
+	void erase(){
+
+	}
+
+	float x;
+	float y;
+	float angle;
+	float speed;
+	float timeAlive;
+	bool visible;
+};
 
 ClassDemoApp::ClassDemoApp() {
 	Setup();
@@ -41,37 +61,27 @@ void ClassDemoApp::Setup(){
 	#ifdef _WINDOWS
 		glewInit();
 	#endif
-
-
 	// Setup
 	//Sets pixel size and offset of rendering area
 	glViewport(0, 0, 640, 360);
 
-	/*
-	ship = Entity(RESOURCE_FOLDER"playerShip2_red.png");
-	asteroid = Entity(RESOURCE_FOLDER"meteorGrey_big4.png");
-	ufo = Entity(RESOURCE_FOLDER"ufoBlue.png");
-	*/
+	program = new ShaderProgram(RESOURCE_FOLDER"vertex_textured.glsl", RESOURCE_FOLDER"fragment_textured.glsl");
+	projectionMatrix.setOrthoProjection(-3.55f, 3.55f, -2.0f, 2.0f, -1.0f, 1.0f);
+	//Pass the matrices to our program
+	program->setProjectionMatrix(projectionMatrix);
+	program->setViewMatrix(viewMatrix);
 
-	player1 = Entity(RESOURCE_FOLDER"paddleBlu.png");
-	player1.speed = 5.0f;
-	player1.rotation = (90 * (3.1415926 / 180));
-	player1.width = player1.width / 360 * 2;
-	player1.height = player1.height / 360 * 2;
-	player1.x = -3.55f + player1.width / 2;
-
-	player2 = Entity(RESOURCE_FOLDER"paddleRed.png");
-	player2.speed = 5.0f;
-	player2.rotation = (90 * (3.1415926 / 180));
-	player2.width = player2.width / 360 * 2;
-	player2.height = player2.height / 360 * 2;
-	player2.x = 3.55f - player2.width / 2;
-
-	ball = Entity(RESOURCE_FOLDER"ballGrey.png");
-	ball.speed = 0.0f;
-	ball.width = ball.width / 360 * 2;
-	ball.height = ball.height / 360 * 2;
-	ball.rotation = (45 * (3.1415926 / 180));
+	player1 = Entity(RESOURCE_FOLDER"sheet.png");
+	//<SubTexture name="playerShip1_red.png" x="224" y="832" width="99" height="75"/>
+	player1.sprite = SheetSprite(player1.textureID, 224.0f / 1024.0f, 832.0f / 1024.0f, 99.0f / 1024.0f, 75.0f / 1024.0f, 0.5f);
+	player1.rotation = 0.0f;
+	// currently settting player dimensions to sprite dimensions,
+	// should tweak later
+	player1.width = player1.sprite.width;
+	player1.height = player1.sprite.height;
+	player1.x = 0.0f;
+	player1.y = -1.5f;
+	entities.push_back(player1);
 
 	// Assignment 04 WIP
 	// When adding a character spritesheet, divide by sheet size
@@ -81,7 +91,6 @@ void ClassDemoApp::Setup(){
 
 	// push back player & other entities onto vector of entities
 
-
 	//Enabling Blend
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // alpha blending
@@ -89,7 +98,6 @@ void ClassDemoApp::Setup(){
 	
 	//Keeping Time
 	lastFrameTicks = 0.0f;
-	timeLeftOver = 0.0f;
 
 	//Controller support
 	xDir = 0.0f; 
@@ -102,7 +110,6 @@ void ClassDemoApp::Setup(){
 
 	//SDL_Event event;
 	done = false;
-	
 }
 
 ClassDemoApp::~ClassDemoApp() {
@@ -111,26 +118,52 @@ ClassDemoApp::~ClassDemoApp() {
 	SDL_Quit();
 }
 
+void ClassDemoApp::DrawText(int fontTexture, std::string text, float size, float spacing) {
+	float texture_size = 1.0 / 16.0f;
+	std::vector<float> vertexData;
+	std::vector<float> texCoordData;
+	for (int i = 0; i < text.size(); i++) {
+		float texture_x = (float)(((int)text[i]) % 16) / 16.0f;
+		float texture_y = (float)(((int)text[i]) / 16) / 16.0f;
+		vertexData.insert(vertexData.end(), {
+			((size + spacing) * i) + (-0.5f * size), 0.5f * size,
+			((size + spacing) * i) + (-0.5f * size), -0.5f * size,
+			((size + spacing) * i) + (0.5f * size), 0.5f * size,
+			((size + spacing) * i) + (0.5f * size), -0.5f * size,
+			((size + spacing) * i) + (0.5f * size), 0.5f * size,
+			((size + spacing) * i) + (-0.5f * size), -0.5f * size,
+		});
+		texCoordData.insert(texCoordData.end(), {
+			texture_x, texture_y,
+			texture_x, texture_y + texture_size,
+			texture_x + texture_size, texture_y,
+			texture_x + texture_size, texture_y + texture_size,
+			texture_x + texture_size, texture_y,
+			texture_x, texture_y + texture_size,
+		});
+	}
+	glUseProgram(program->programID);
+	glVertexAttribPointer(program->positionAttribute, 2, GL_FLOAT, false, 0, vertexData.data());
+	glEnableVertexAttribArray(program->positionAttribute);
+	glVertexAttribPointer(program->texCoordAttribute, 2, GL_FLOAT, false, 0, texCoordData.data());
+	glEnableVertexAttribArray(program->texCoordAttribute);
+	glBindTexture(GL_TEXTURE_2D, fontTexture);
+	glDrawArrays(GL_TRIANGLES, 0, text.size() * 6);
+
+	glDisableVertexAttribArray(program->positionAttribute);
+	glDisableVertexAttribArray(program->texCoordAttribute);
+}
+
 void ClassDemoApp::Render() {
 	// Clear, render, and swap the window
 	glClearColor(0.4f, 0.2f, 0.4f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
-	// Assignment 03 WIP
-	// modelMatrix.identity();
-	// program.set ....
-	// call entity renders and pass shaderprogram
-
-	/*ship.DrawSprite();
-	asteroid.DrawSprite();
-	ufo.DrawSprite();*/
-
-	player1.DrawSprite();
-	player2.DrawSprite();
-	ball.DrawSprite();
-
-	//WIP ASSIGNMENT 03
-	//enemySprite.Draw();
+	for (int i = 0; i < entities.size(); i++){
+		// Pass shaderprogram and call entity renders
+		entities[i].program = program;
+		entities[i].Render();
+	}
 
 	SDL_GL_SwapWindow(displayWindow);
 }
@@ -140,7 +173,8 @@ void ClassDemoApp::ProcessEvents() {
 		if (event.type == SDL_QUIT || event.type == SDL_WINDOWEVENT_CLOSE) {
 			done = true;
 		} // Input Events: Action Events, Jumping, Shooting
-		/*else if(event.type == SDL_JOYAXISMOTION){ //Controller support, ADD Buttons under here
+		//Controller support, ADD Buttons under here
+		/*else if(event.type == SDL_JOYAXISMOTION){ 
 			if(event.jaxis.which == 0){
 				// event.jaxis.which tells us which controller (e.g. 0,1,etc.) 
 				// event.jaxis.axis tells us which axis moved (0 for x-axis ,1 for y, etc.) 
@@ -179,44 +213,32 @@ void ClassDemoApp::ProcessEvents() {
 			// event.button.y is the click y position
 			// event.button.button is the mouse button that was clicked (1,2,3,etc.)
 		}*/
-		
 		//Keyboard Controls
 		else if (event.type == SDL_KEYDOWN) {
-			/*
-			if (event.key.keysym.scancode == SDL_SCANCODE_W){
-				player1.direction_y = 1.0f;
-			}
-			else if (event.key.keysym.scancode == SDL_SCANCODE_UP){
-				player2.direction_y = -1.0f;
-			}
-			*/
 			if (event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
 				ball.speed = 2.0f;
 			}
 		}
 		// Polling Input: Continuous Input, movement, modifiers
 		const Uint8 *keys = SDL_GetKeyboardState(NULL);
-		if (keys[SDL_SCANCODE_W]) {
-			player1.direction_y = 1.0f;
+		if (keys[SDL_SCANCODE_D]) {
+			entities[0].acceleration_x = 1.0f;
 		}
-		else if (keys[SDL_SCANCODE_S]) {
-			player1.direction_y = -1.0f;
+		else if (keys[SDL_SCANCODE_A]) {
+			entities[0].acceleration_x = -1.0f;
 		}
-		else {
-			player1.direction_y = 0.0f;
+		else{
+			entities[0].acceleration_x = 0.0f;
 		}
 
-		// SEPARATE IF, ELSE IF STRUCTURES FOR DIFFERENT PLAYERS
-
+		/* SEPARATE IF, ELSE IF STRUCTURES FOR DIFFERENT PLAYERS
 		if (keys[SDL_SCANCODE_UP]) {
 			player2.direction_y = 1.0f;
 		}
 		else if (keys[SDL_SCANCODE_DOWN]) {
 			player2.direction_y = -1.0f;
 		}
-		else {
-			player2.direction_y = 0.0f;
-		}
+		*/
 	}	
 }
 
@@ -224,41 +246,16 @@ void ClassDemoApp::Update(float elapsed) {
 	// move things based on time passed
 	// check for collisions and respond to them
 
+	//replace all with
+	for(int i = 0; i < entities.size(); i++){
+		entities[i].Update(elapsed, entities);
+	}
+
 	//Controller support
 	/*positionX += elapsed * 0.5f * xDir;
 	positionY += elapsed * 0.5f * -yDir;
 	*/
 	/*
-	ship.Update(positionX, positionY, angle);
-	asteroid.Update(1.5f, 1.0f, 0.0f);
-	ufo.Update(-2.4f, -1.4f, 0.0f);
-	*/
-
-	//if either of the players collide with the top of bottom of the screen
-	// move them away from the edge to keep them from going off the screen
-	
-	//player 1 collision detection
-	if (player1.y + (player1.height / 2) >= 2.0f){
-		player1.y -= (player1.height / 2);
-	}
-	else if (player1.y - (player1.height / 2) <= -2.0f) {
-		player1.y += (player1.height / 2);
-	}
-	else{
-		player1.y += elapsed * player1.speed * player1.direction_y;
-	}
-	
-	//player 2 collision detection
-	if (player2.y + (player2.height / 2) >= 2.0f){
-		player2.y -= (player2.height / 2);
-	}
-	else if (player2.y - (player2.height / 2) <= -2.0f) {
-		player2.y += (player2.height / 2);
-	}
-	else{
-		player2.y += elapsed * player2.speed * player2.direction_y;
-	}
-
 	//ball collision detection
 	//if ball goes off the screen at the sides, re-serve the ball
 	if (ball.x > 3.55f){
@@ -305,15 +302,16 @@ void ClassDemoApp::Update(float elapsed) {
 
 	ball.x += elapsed * ball.speed * cos(ball.rotation);
 	ball.y += elapsed * ball.speed * sin(ball.rotation);
+	*/
 	
 	// Assignment 04 WIP
-	//When updating entities, loop through, updating each entity
-	//if not static, update entity position
-	//loop through and check if current entity is colliding with any other entity
-	// do not check if colliding with self
-	// only check if colliding with isStatic entities
-
-	//WIP Penetration adjustments
+	/*When updating entities, loop through, updating each entity
+	if not static, update entity position
+	loop through and check if current entity is colliding with any other entity
+	 do not check if colliding with self
+	 only check if colliding with isStatic entities
+	 */
+	//WIP Assigment 04 Penetration adjustments
 	/*
 	player.y += player.velocity_y * elapsed;
 	if( player.collidesWith(block)){
@@ -336,26 +334,6 @@ void ClassDemoApp::Update(float elapsed) {
 		player.velocity_x = 0.0f;
 	}*/
 }
-
-//WIP Assignment 03 Add Velocity and Acceleration to Entity class
-//WIP Assignment 03 Add Friction "Rate of decrease in velocity"
-//WIP lerp
-
-
-// WIP Assignment03 Fixed update for physics and collision detection
-void ClassDemoApp::FixedUpdate(float elapsed){
-	float fixedElapsed = elapsed + timeLeftOver;
-	if (fixedElapsed > FIXED_TIMESTEP * MAX_TIMESTEPS){
-		fixedElapsed = FIXED_TIMESTEP * MAX_TIMESTEPS;
-	}
-	while (fixedElapsed >= FIXED_TIMESTEP){
-		fixedElapsed -= FIXED_TIMESTEP;
-	}
-	timeLeftOver = fixedElapsed;
-
-	Update(elapsed);
-}
-
 
 bool ClassDemoApp::UpdateAndRender() {
 	float ticks = (float)SDL_GetTicks() / 1000.0f;
