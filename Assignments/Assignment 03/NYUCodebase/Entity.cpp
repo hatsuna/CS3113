@@ -1,55 +1,9 @@
 #include "Entity.h"
 
 Entity::Entity(){
-	x = 0.0f;
-	y = 0.0f;
-	rotation = 0.0f;
-
+	// WIP figure out width and height of entity
 	width = 0.0f;
 	height = 0.0f;
-
-	speed = 0.0f;
-	direction_x = 0.0f;
-	direction_y = 0.0f;
-
-	timeLeftOver = 0.0f;
-}
-
-GLuint Entity::LoadTexture(const char *image_path) {
-	SDL_Surface *surface = IMG_Load(image_path);
-	//Creates a new OpenGL texture ID
-	GLuint textureID;
-	glGenTextures(1, &textureID);
-	//Bind a texture to a texture target
-	glBindTexture(GL_TEXTURE_2D, textureID);
-	//Sets the texture data of the specified texture target, RGBA or RGB
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, surface->w, surface->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, surface->pixels);
-	//Sets a texture parameter of the specified texture target,
-	//must be set before texture can be used
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-	//glClamp and glRepeat used to deal with textures on the outside
-
-	//glClamp - non-tiled images with alpha
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-
-	//glRepeat - tiled images
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	//glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-	SDL_FreeSurface(surface);
-	return textureID;
-}
-
-Entity::Entity(const char *image_path){
-	
-	textureID = LoadTexture(image_path);
-	
-	// WIP figure out width and height of entity
-	width = 100.0f;
-	height = 100.0f;
 	rotation = 0.0f;
 
 	x = 0.0f;
@@ -63,7 +17,14 @@ Entity::Entity(const char *image_path){
 
 	timeLeftOver = 0.0f;
 }
-
+	/*
+Entity::Entity(const char *image_path){
+	
+	textureID = LoadTexture(image_path);
+	
+	
+}
+*/
 // Call if non-uniform sprite sheet is used
 void Entity::Draw(){
 	modelMatrix.identity();
@@ -75,7 +36,6 @@ void Entity::Draw(){
 	sprite.program = program;
 	sprite.Draw();	
 }
-
 // Call if single texture is used
 void Entity::DrawSprite(){
 	// Set position attributes for 2 triangles.
@@ -111,7 +71,6 @@ void Entity::DrawSprite(){
 	glDisableVertexAttribArray(program->positionAttribute);
 	glDisableVertexAttribArray(program->texCoordAttribute);
 }
-
 // Call if uniform sprite sheet is used
 void Entity::DrawSpriteSheetSprite(int index, int spriteCountX, int spriteCountY) {
 	float u = (float)(((int)index) % spriteCountX) / (float)spriteCountX; 
@@ -145,7 +104,6 @@ void Entity::DrawSpriteSheetSprite(int index, int spriteCountX, int spriteCountY
 	glDisableVertexAttribArray(program->positionAttribute);
 	glDisableVertexAttribArray(program->texCoordAttribute);
 }
-
 //WIP Assignment 03
 //void Entity::Animate(){
 /*animationElapsed += elapsed;
@@ -172,43 +130,108 @@ void Entity::Update(float elapsed, std::vector<Entity> entities){
 		fixedElapsed -= FIXED_TIMESTEP;
 	}
 	timeLeftOver = fixedElapsed;
-
-	//apply acceleration, velocity, and position changes according to fixed elapsed
-	//using the friction number as a hack cutoff for when it just stops moving
-	if (velocity_x > 0 && acceleration_x == 0.0f){
-		acceleration_x = -friction_x;
-	}
-	else if (velocity_x < 0 && acceleration_x == 0.0f){
-		acceleration_x = friction_x;
-	}
 	
-	if ((velocity_x > 0 && acceleration_x * fixedElapsed < -(velocity_x)) ||
-		(velocity_x < 0 && acceleration_x * fixedElapsed > -(velocity_x))){
-		acceleration_x = 0.0f;
-		velocity_x = 0.0f;
-	}
-	else{
-		velocity_x += acceleration_x * fixedElapsed;
-	}
-	x += velocity_x * fixedElapsed;
-
-	//check collision with sides
-	if (x + 2 * width >= 3.5f && velocity_x > 0){
-		x = 3.5f - 2 * width;
-	}
-	else if (x - 2 * width <= -3.5f && velocity_x < 0){
-		x = -3.5f + 2 * width;
-	}
-
-
 	//loop through vector of entities to check collisions
 	//adjust position and velocity(?) depending on collisions
-	
-}
 
+	switch (entityType){
+	case TYPE_PLAYER:
+		//apply acceleration, velocity, and position changes according to fixed elapsed
+		//using the friction number as a hack cutoff for when it just stops moving
+		if (velocity_x > 0 && acceleration_x == 0.0f){
+			acceleration_x = -friction_x;
+		}
+		else if (velocity_x < 0 && acceleration_x == 0.0f){
+			acceleration_x = friction_x;
+		}
+
+		if ((velocity_x > 0 && acceleration_x * fixedElapsed < -(velocity_x)) ||
+			(velocity_x < 0 && acceleration_x * fixedElapsed > -(velocity_x))){
+			acceleration_x = 0.0f;
+			velocity_x = 0.0f;
+		}
+		else{
+			velocity_x += acceleration_x * fixedElapsed;
+		}
+		x += velocity_x * fixedElapsed;
+
+		//check collision with sides
+		if (x + 2 * width >= 3.5f && velocity_x > 0){
+			x = 3.5f - 2 * width;
+		}
+		else if (x - 2 * width <= -3.5f && velocity_x < 0){
+			x = -3.5f + 2 * width;
+		}
+
+		//check collision with enemies
+		for (int i = 0; i < entities.size(); i++){
+			//check if player collides with a non-player entity
+			if ((y - height * 2 >= entities[i].y + entities[i].height * 2) ||
+				(y + height * 2 <= entities[i].y - entities[i].height * 2) ||
+				(x - width * 2 >= entities[i].x + entities[i].width * 2) ||
+				(x + width * 2 <= entities[i].x - entities[i].width * 2)){
+				//if true, then not intersecting
+			}
+			else{
+				//intersecting
+				if (entities[i].entityType == TYPE_ENEMY){
+					entities[i].visible = false;
+					visible = false;
+				}
+			}
+		}
+		break;
+	case TYPE_ENEMY:
+		x += velocity_x * fixedElapsed;
+
+		//check collision with sides
+		if (x + 2 * width >= 3.5f){
+			y -= height * 4;
+			x = 3.0f;
+			velocity_x = -velocity_x;
+		}
+		else if (x - 2 * width <= -3.5){
+			y -= height * 4;
+			x = -3.0f;
+			velocity_x = -velocity_x;
+		}
+
+		break;
+	case TYPE_BULLET:
+		//	Bullet::timeAlive += fixedElapsed;
+		//x += sin(rotation) * speed * elapsed;
+		y += speed * fixedElapsed;
+
+		for (int i = 0; i < entities.size(); i++){
+			//check if bullet collides with an entity
+			if ((y - height * 2 >= entities[i].y + entities[i].height * 2) ||
+				(y + height * 2 <= entities[i].y - entities[i].height * 2) ||
+				(x - width * 2 >= entities[i].x + entities[i].width * 2) ||
+				(x + width * 2 <= entities[i].x - entities[i].width * 2)){
+				//if true, then not intersecting
+			}
+			else{
+				//intersecting
+				if (entities[i].entityType == TYPE_ENEMY){
+					entities[i].visible = false;
+					visible = false;
+					
+				}
+			}
+		}
+	break;
+	}
+}
 void Entity::Render(){
 	//call according draw call depending on texture
 
 	//using non-uniform sprite sheet
 	Draw();
+}
+
+
+Bullet::Bullet(){}
+
+void Bullet::erase(){
+
 }

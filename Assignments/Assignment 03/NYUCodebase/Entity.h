@@ -22,23 +22,18 @@
 #define FIXED_TIMESTEP 0.01666666f
 #define MAX_TIMESTEPS 6
 
-// WIP Assignment 
-// enum Entity types
-// add entity variable
+enum EntityTypes {TYPE_PLAYER, TYPE_ENEMY, TYPE_BULLET};
 
 class Entity {
 	public:
 		Entity();
-		Entity(const char *image_path);
-
-		GLuint LoadTexture(const char *image_path);
+	//	Entity(const char *image_path);
 		
 		void Draw();
 		void DrawSprite();
 		void DrawSpriteSheetSprite(int index, int spriteCountX, int spriteCountY);
 		void Animate();
 		
-
 		void Update(float elapsed, std::vector<Entity> entities);
 		void Render();
 		
@@ -51,6 +46,8 @@ class Entity {
 		int currentIndex = 0;
 		*/
 
+		int entityType;
+
 		SheetSprite sprite; // use if sprite is on a sprite sheet
 		GLuint textureID; // use if sprite file is just one sprite
 
@@ -59,6 +56,7 @@ class Entity {
 		Matrix modelMatrix;
 
 		float timeLeftOver;
+		bool visible;
 
 		float rotation;
 		float width;
@@ -81,7 +79,7 @@ class Entity {
 		//Assignment 04 WIP Additions, need to implement
 		/*
 		void Update(float elapsed);
-		void Render(ShaderProgram * program); // pass shaderprogram
+		void Render(ShaderProgram * program); // pass shaderprogrbuam
 		bool collidesWith(Entity * entity);
 		
 		Sheetsprite sprite;
@@ -94,4 +92,17 @@ class Entity {
 		
 		bool isStatic;
 		*/
+};
+
+class Bullet : public Entity{
+	public:
+		Bullet();
+		void erase();
+
+		float timeAlive;
+		
+		//inherited from entity
+		//float x;
+		//float y;
+		//float speed;
 };
