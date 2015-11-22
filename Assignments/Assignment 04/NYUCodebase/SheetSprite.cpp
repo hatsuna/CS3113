@@ -8,7 +8,7 @@ SheetSprite::SheetSprite(unsigned int textureID, float u, float v,
 	size(size), textureID(textureID), u(u), v(v), width(width), height(height){}
 
 
-void SheetSprite::Draw() {
+void SheetSprite::Draw(ShaderProgram * program) {
 	glBindTexture(GL_TEXTURE_2D, textureID);
 	GLfloat texCoords[] = {
 		u, v + height, 

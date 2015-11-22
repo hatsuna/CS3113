@@ -24,6 +24,18 @@
 #define WINDOW_WIDTH 640
 #define WINDOW_HEIGHT 360
 
+// 60 FPS (1.0f / 60.0f)
+#define FIXED_TIMESTEP 0.01666666f
+#define MAX_TIMESTEPS 6
+
+#define LEVEL_HEIGHT 16
+#define LEVEL_WIDTH 22
+
+#define SPRITE_COUNT_X
+#define SPRITE_COUT_Y
+
+#define TILE_SIZE
+
 enum GameState { STATE_TITLE_SCREEN, STATE_GAME_LEVEL, STATE_GAME_OVER };
 
 class ClassDemoApp {
@@ -40,7 +52,7 @@ class ClassDemoApp {
 		void shootBullet();
 		bool shouldRemoveBullet(Bullet bullet);
 		void DrawText(int fontTexture, std::string text, float size, float spacing);
-
+		void buildLevel();
 
 		void titleScreenRender();
 		void titleScreenUpdate();
@@ -55,6 +67,7 @@ class ClassDemoApp {
 	private:
 		int state;
 		int score;
+		float timeLeftOver;
 
 		bool done;
 		SDL_Event event;
@@ -76,6 +89,8 @@ class ClassDemoApp {
 
 		std::vector<Entity> entities;
 		std::vector<Bullet> bullets;
+
+	//	unsigned char levelData[LEVEL_HEIGHT][LEVEL_WIDTH];
 				
 		float xDir;
 		float yDir;

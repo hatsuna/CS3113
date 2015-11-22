@@ -52,6 +52,11 @@ GLuint ClassDemoApp::LoadTexture(const char *image_path) {
 	SDL_FreeSurface(surface);
 	return textID;
 }
+
+// When adding a character spritesheet, divide by sheet size
+// spriteSheetTexture = LoadTexture("sheet.png");
+// player.sprite = SheetSprite(spriteSheetTexture, 67.0f / 512.0f, ... )
+// When setting collision, sprite and collision box might not need to be the same
 void ClassDemoApp::SpawnPlayer(){
 	Entity player1;
 	//<SubTexture name="playerShip1_red.png" x="224" y="832" width="99" height="75"/>
@@ -59,11 +64,12 @@ void ClassDemoApp::SpawnPlayer(){
 	player1.rotation = 0.0f;
 	// currently settting player dimensions to sprite dimensions,
 	// should tweak later
-	player1.width = player1.sprite.width;
-	player1.height = player1.sprite.height;
+	player1.width = player1.sprite.width; // player1.sprite.size;
+	player1.height = player1.sprite.height; // player1.sprite.size;;
 	player1.x = 0.0f;
-	player1.y = -1.5f;
+	player1.y = 0.0f;
 	player1.visible = true;
+	player1.isStatic = false;
 	player1.entityType = TYPE_PLAYER;
 	entities.push_back(player1);
 }
@@ -73,13 +79,14 @@ void ClassDemoApp::SpawnEnemies(){
 		//<SubTexture height = "84" width = "93" y = "468" x = "425" name = "enemyBlue1.png" / >
 		newEnemy.sprite = SheetSprite(textureID, 425.0f / 1024.0f, 468.0f / 1024.0f, 93.0f / 1024.0f, 84.0f / 1024.0f, 0.3f);
 		newEnemy.rotation = 0.0f;
-		newEnemy.width = newEnemy.sprite.width;
-		newEnemy.height = newEnemy.sprite.height;
+		newEnemy.width = newEnemy.sprite.width;// * newEnemy.sprite.size;
+		newEnemy.height = newEnemy.sprite.height; // *newEnemy.sprite.size;
 		//need to be tweaked if there are multiple lines of enemies
 		newEnemy.x = -3.55 + ((3 * 2) / numEnemies) * (i + 1);
 		newEnemy.y = 1.5f;
 		newEnemy.velocity_x = 0.5f;
 		newEnemy.visible = true;
+		newEnemy.isStatic = false;
 		newEnemy.entityType = TYPE_ENEMY;
 		entities.push_back(newEnemy);
 	}
@@ -90,7 +97,7 @@ void ClassDemoApp::Setup(){
 
 	joystick = SDL_JoystickOpen(0); // controller support
 
-	displayWindow = SDL_CreateWindow("Assignment 03 Space Invaders - Matthew Pon", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
+	displayWindow = SDL_CreateWindow("Assignment 04 Platformer - Matthew Pon", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, WINDOW_WIDTH, WINDOW_HEIGHT, SDL_WINDOW_OPENGL);
 	context = SDL_GL_CreateContext(displayWindow);
 	SDL_GL_MakeCurrent(displayWindow, context);	
 	#ifdef _WINDOWS
@@ -112,18 +119,13 @@ void ClassDemoApp::Setup(){
 	score = 0;
 	numEnemies = 5;
 
-	// Assignment 04 WIP
-	// When adding a character spritesheet, divide by sheet size
-	// spriteSheetTexture = LoadTexture("sheet.png");
-	// player.sprite = SheetSprite(spriteSheetTexture, 67.0f / 512.0f, ... )
-	//When setting collision, sprite and collision box might not need to be the same
-
 	//Enabling Blend
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA); // alpha blending
 	// glBlendFunc (GL_SRC_ALPHA, GL_ONE); // or additive blending
 	
 	//Keeping Time
+	timeLeftOver = 0.0f;
 	lastFrameTicks = 0.0f;
 
 	//Controller support
@@ -142,14 +144,15 @@ void ClassDemoApp::shootBullet(){
 	Bullet newBullet;
 	//	<SubTexture name="laserRed01.png" x="858" y="230" width="9" height="54"/>
 	newBullet.sprite = SheetSprite(textureID, 858.0f / 1024.0f, 230.0f / 1024.0f, 9.0f / 1024.0f, 54 / 1024.0f, 0.3f);
-	newBullet.width = newBullet.sprite.width;
-	newBullet.height = newBullet.sprite.height;
+	newBullet.width = newBullet.sprite.width; //  * newBullet.sprite.size;
+	newBullet.height = newBullet.sprite.height; // *newBullet.sprite.size;
 	newBullet.visible = true;
+	newBullet.isStatic = false;
 	newBullet.timeAlive = 0.0f;
 	newBullet.x = entities[0].x;
 	newBullet.y = entities[0].y;
-	newBullet.rotation = 0.0f;//(float)(45 - (rand() % 90));
-	newBullet.speed = 0.5f;
+	newBullet.rotation = 0.0f;
+	newBullet.velocity_y = 0.5f;
 	newBullet.entityType = TYPE_BULLET;
 	bullets.push_back(newBullet);
 }
@@ -196,6 +199,66 @@ void ClassDemoApp::DrawText(int fontTexture, std::string text, float size, float
 	glDisableVertexAttribArray(program->positionAttribute);
 	glDisableVertexAttribArray(program->texCoordAttribute);
 }
+void ClassDemoApp::buildLevel(){
+	
+
+	Entity platform;
+	//<SubTexture height="39" width="222" y="78" x="0" name="buttonBlue.png"/>
+	platform.sprite = SheetSprite(textureID, 0.0f / 1024.0f, 78.0f / 1024.0f, 222.0f / 1024.0f, 39.0f / 1024.0f, 0.5f);
+	platform.rotation = 0.0f;
+	// currently settting player dimensions to sprite dimensions,
+	// should tweak later
+	platform.width = platform.sprite.width / platform.sprite.size;
+	platform.height = platform.sprite.height / platform.sprite.size;
+	platform.x = 0.0f;
+	platform.y = -1.7f;
+	platform.visible = true;
+	platform.isStatic = true;
+	platform.entityType = TYPE_LEVEL;
+	entities.push_back(platform);
+
+	/* tiled level
+	unsigned char level1Data[LEVEL_HEIGHT][LEVEL_WIDTH] =
+	{
+		{ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11 },
+		{ 0, 20, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 20, 0 },
+		{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
+		{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
+		{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
+		{ 0, 20, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6, 6, 6, 0, 0, 0, 0, 0, 20, 0 },
+		{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
+		{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
+		{ 0, 20, 6, 6, 6, 6, 6, 0, 0, 0, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 20, 0 },
+		{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
+		{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
+		{ 0, 20, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6, 6, 6, 0, 0, 0, 0, 0, 20, 0 },
+		{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
+		{ 0, 20, 125, 118, 0, 0, 116, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 117, 0, 127, 20, 0 },
+		{ 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2 },
+		{ 32, 33, 33, 34, 32, 33, 33, 34, 33, 35, 100, 101, 35, 32, 33, 32, 34, 32, 33, 32, 33, 33 }
+	};
+	memcpy(levelData, level1Data, LEVEL_HEIGHT*LEVEL_WIDTH);
+
+	std::vector<float> vertexData;
+	std::vector<float> texCoordData;
+	for (int y = 0; y < LEVEL_HEIGHT; y++) {
+		for (int x = 0; x < LEVEL_WIDTH; x++) {
+			if (levelData[y][x] != 0){
+				float u = (float)(((int)levelData[y][x]) % SPRITE_COUNT_X) / (float)SPRITE_COUNT_X; float v = (float)(((int)levelData[y][x]) / SPRITE_COUNT_X) / (float)SPRITE_COUNT_Y;
+				float spriteWidth = 1.0f / (float)SPRITE_COUNT_X; float spriteHeight = 1.0f / (float)SPRITE_COUNT_Y;
+				vertexData.insert(vertexData.end(), {
+					TILE_SIZE * x, -TILE_SIZE * y, TILE_SIZE * x, (-TILE_SIZE * y) - TILE_SIZE, (TILE_SIZE * x) + TILE_SIZE, (-TILE_SIZE * y) - TILE_SIZE,
+					TILE_SIZE * x, -TILE_SIZE * y, (TILE_SIZE * x) + TILE_SIZE, (-TILE_SIZE * y) - TILE_SIZE, (TILE_SIZE * x) + TILE_SIZE, -TILE_SIZE * y
+				});
+				texCoordData.insert(texCoordData.end(), { u, v,
+					u, v + (spriteHeight),
+					u + spriteWidth, v + (spriteHeight), u, v,
+					u + spriteWidth, v + (spriteHeight), u + spriteWidth, v
+				});
+			}
+		}
+	}*/
+}
 void ClassDemoApp::titleScreenRender(){
 	modelMatrix.identity();
 	modelMatrix.Translate(-3.25f, 1.25f, 0.0f);
@@ -203,27 +266,16 @@ void ClassDemoApp::titleScreenRender(){
 
 	program->setModelMatrix(modelMatrix);
 
-	DrawText(LoadTexture(RESOURCE_FOLDER"font1.png"), "SPACE INVADERS", 0.5f, 0.001f);
+	DrawText(LoadTexture(RESOURCE_FOLDER"font1.png"), "Platformer", 0.3f, 0.0f);
 }
 void ClassDemoApp::gameRender(){
 	for (int i = 0; i < entities.size(); i++){
 		// Pass shaderprogram and call entity renders
-		entities[i].program = program;
-		entities[i].Render();
+		entities[i].Render(program);
 	}
 	for (int i = 0; i < bullets.size(); i++){
-		bullets[i].program = program;
-		bullets[i].Render();
+		bullets[i].Render(program);
 	}
-	/*
-	modelMatrix.identity();
-	modelMatrix.Translate(-3.25f, 1.25f, 0.0f);
-	modelMatrix.Rotate(0);
-
-	program->setModelMatrix(modelMatrix);
-
-	DrawText(LoadTexture(RESOURCE_FOLDER"font1.png"), std::to_string(score), 0.1f, 0.001f);
-	*/
 }
 void ClassDemoApp::gameOverRender(){
 	modelMatrix.identity();
@@ -269,7 +321,8 @@ void ClassDemoApp::ProcessEvents() {
 					state = STATE_GAME_LEVEL;
 					entities.clear();
 					SpawnPlayer();
-					SpawnEnemies();
+				//	SpawnEnemies();
+					buildLevel();
 				}
 			}
 			break; 
@@ -322,22 +375,31 @@ void ClassDemoApp::ProcessEvents() {
 			else if (event.type == SDL_KEYDOWN) {
 				if (event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
 					shootBullet();
+					entities[0].velocity_y = 1.0f;
 				}
 			}
 			// Polling Input: Continuous Input, movement, modifiers
 			const Uint8 *keys = SDL_GetKeyboardState(NULL);
 			if (keys[SDL_SCANCODE_D]) {
-				entities[0].acceleration_x = 1.0f;
+				entities[0].acceleration_x = .75f;
 			}
 			else if (keys[SDL_SCANCODE_A]) {
-				entities[0].acceleration_x = -1.0f;
+				entities[0].acceleration_x = -.75f;
 			}
-			else{
+			else {
 				entities[0].acceleration_x = 0.0f;
 			}
-
+			if (keys[SDL_SCANCODE_W]) {
+				//entities[0].acceleration_y = 0.75f;
+			}
+			else if (keys[SDL_SCANCODE_S]) {
+				//entities[0].acceleration_y = -0.75f;
+			}
+			else {
+				entities[0].acceleration_y = 0.0f;
+			}
 			/* SEPARATE IF, ELSE IF STRUCTURES FOR DIFFERENT PLAYERS
-			if (keys[SDL_SCANCODE_UP]) {
+			if (keys[SDL_SCANCODE_UP]) {s
 			player2.direction_y = 1.0f;
 			}
 			else if (keys[SDL_SCANCODE_DOWN]) {
@@ -345,13 +407,18 @@ void ClassDemoApp::ProcessEvents() {
 			}
 			*/
 			break;
-		
 		}
 	}	
 }
 void ClassDemoApp::titleScreenUpdate(){
 }
+//gameUpdate is passed FixedTimeStep as elapsed
 void ClassDemoApp::gameUpdate(float elapsed){
+	// WIP Screen Scrolling
+	/*viewMatrix.Translate(entities[0].modelMatrix.inverse);
+	program->setViewMatrix(viewMatrix);
+	*/
+
 	// move things based on time passed
 	// check for collisions and respond to them
 
@@ -381,52 +448,30 @@ void ClassDemoApp::gameUpdate(float elapsed){
 			entities[i].Update(elapsed, entities);
 		}
 	}
-	
-
 	//Controller support
 	/*positionX += elapsed * 0.5f * xDir;
 	positionY += elapsed * 0.5f * -yDir;
 	*/
-	// Assignment 04 WIP
-	/*When updating entities, loop through, updating each entity
-	if not static, update entity position
-	loop through and check if current entity is colliding with any other entity
-	do not check if colliding with self
-	only check if colliding with isStatic entities
-	*/
-	//WIP Assigment 04 Penetration adjustments
-	/*
-	player.y += player.velocity_y * elapsed;
-	if( player.collidesWith(block)){
-	float penetration = fabs( fabs(player.y - block.y) - player.height / 2.0f - block.height / 2.0f);
-	if player.y > block.y){
-	player.y += penetration + 0.0001;
-	} else{
-	player.y -= penetration + 0.0001;
-	}
-	player.velocity_y = 0.0f;
-	}
-	player.x += player.velocity_x * elapsed;
-	if( player.collidesWith(block)){
-	float penetration = fabs( fabs(player.x - block.x) - player.width / 2.0f - block.width / 2.0f);
-	if player.x > block.x){
-	player.x += penetration + 0.0001;
-	} else{
-	player.x -= penetration + 0.0001;
-	}
-	player.velocity_x = 0.0f;
-	}*/
 }
 void ClassDemoApp::gameOverUpdate(){
 	
 }
 void ClassDemoApp::Update(float elapsed) {
+	float fixedElapsed = elapsed + timeLeftOver;
+	if (fixedElapsed > FIXED_TIMESTEP * MAX_TIMESTEPS){
+		fixedElapsed = FIXED_TIMESTEP * MAX_TIMESTEPS;
+	}
+	while (fixedElapsed >= FIXED_TIMESTEP){
+		fixedElapsed -= FIXED_TIMESTEP;
+	}
+	timeLeftOver = fixedElapsed;
+
 	switch (state){
 	case STATE_TITLE_SCREEN:
 		titleScreenUpdate();
 		break;
 	case STATE_GAME_LEVEL:
-		gameUpdate(elapsed);
+		gameUpdate(FIXED_TIMESTEP);
 		break;
 	case STATE_GAME_OVER:
 		gameOverUpdate();
