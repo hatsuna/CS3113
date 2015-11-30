@@ -31,10 +31,10 @@
 #define LEVEL_HEIGHT 16
 #define LEVEL_WIDTH 22
 
-#define SPRITE_COUNT_X
-#define SPRITE_COUT_Y
+#define SPRITE_COUNT_X 13
+#define SPRITE_COUNT_Y 13
 
-#define TILE_SIZE
+#define TILE_SIZE 0.5f
 
 enum GameState { STATE_TITLE_SCREEN, STATE_GAME_LEVEL, STATE_GAME_OVER };
 
@@ -53,6 +53,9 @@ class ClassDemoApp {
 		bool shouldRemoveBullet(Bullet bullet);
 		void DrawText(int fontTexture, std::string text, float size, float spacing);
 		void buildLevel();
+		bool isSolid(int x, int y);
+		void worldToTileCoordinates(float worldX, float worldY, int *gridX, int *gridY);
+		void worldCollisions(Entity * entity);
 
 		void titleScreenRender();
 		void titleScreenUpdate();
@@ -84,13 +87,14 @@ class ClassDemoApp {
 		Matrix viewMatrix;
 
 		GLuint textureID;
+		GLuint LevelTexture;
 
 		int numEnemies;
 
 		std::vector<Entity> entities;
 		std::vector<Bullet> bullets;
 
-	//	unsigned char levelData[LEVEL_HEIGHT][LEVEL_WIDTH];
+		unsigned char levelData[LEVEL_HEIGHT][LEVEL_WIDTH];
 				
 		float xDir;
 		float yDir;

@@ -41,16 +41,14 @@ void Entity::Update(float elapsed, std::vector<Entity> entities){
 	if (!isStatic){ //check if an object is dynamic (and needs to be updated)
 		switch (entityType){
 		case TYPE_PLAYER:			
-			if (velocity_y != 0.0f){
-				collidedBottom == false;
+			if (velocity_y != 0.0f || velocity_x != 0.0f){
+				collidedBottom = false;
 				collidedTop = false;
-			}
-			if (velocity_x != 0.0f){
 				collidedLeft = false;
 				collidedRight = false;
 			}
 
-			if (acceleration_y = 0.0f && collidedBottom == true){
+			if (collidedBottom == true){
 				acceleration_y = 0.0;
 				velocity_y = 0.0f;
 			}
@@ -108,19 +106,19 @@ void Entity::Update(float elapsed, std::vector<Entity> entities){
 			}
 
 			//check collision with sides
-			if (x + 2 * width >= 3.5f && velocity_x > 0){
+			/*if (x + 2 * width >= 3.5f && velocity_x > 0){
 				x = 3.5f - 2 * width;
 			}
 			else if (x - 2 * width <= -3.5f && velocity_x < 0){
 				x = -3.5f + 2 * width;
 			}
 			//check collision with top and bottom
-			/*if (y + 2 * height >= 1.75f && velocity_y > 0){
+			if (y + 2 * height >= 1.75f && velocity_y > 0){
 				y = 1.75f - 2 * height;
-			}*/
+			}
 			else if (y - 2 * height <= -1.75f && velocity_y < 0){
 				y = -1.75f + 2 * height;
-			}
+			}*/
 
 			//WIP Entity Interaction
 			//check list of entities and do something based on their type

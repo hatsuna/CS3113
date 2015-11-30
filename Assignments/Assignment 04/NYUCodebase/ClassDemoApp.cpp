@@ -66,12 +66,15 @@ void ClassDemoApp::SpawnPlayer(){
 	// should tweak later
 	player1.width = player1.sprite.width; // player1.sprite.size;
 	player1.height = player1.sprite.height; // player1.sprite.size;;
-	player1.x = 0.0f;
-	player1.y = 0.0f;
+	player1.x = 3.0f;
+	player1.y = -3.5f;
 	player1.visible = true;
 	player1.isStatic = false;
 	player1.entityType = TYPE_PLAYER;
 	entities.push_back(player1);
+
+	viewMatrix.Translate(-entities[0].x, -entities[0].y, 0);
+	program->setViewMatrix(viewMatrix);
 }
 void ClassDemoApp::SpawnEnemies(){
 	for (int i = 0; i < numEnemies; i++){
@@ -114,6 +117,7 @@ void ClassDemoApp::Setup(){
 	program->setViewMatrix(viewMatrix);
 
 	textureID = LoadTexture(RESOURCE_FOLDER"sheet.png");
+	LevelTexture = LoadTexture(RESOURCE_FOLDER"tiles_spritesheet.png");
 
 	state = STATE_TITLE_SCREEN;
 	score = 0;
@@ -200,8 +204,7 @@ void ClassDemoApp::DrawText(int fontTexture, std::string text, float size, float
 	glDisableVertexAttribArray(program->texCoordAttribute);
 }
 void ClassDemoApp::buildLevel(){
-	
-
+	/* Static / Dynamic Level
 	Entity platform;
 	//<SubTexture height="39" width="222" y="78" x="0" name="buttonBlue.png"/>
 	platform.sprite = SheetSprite(textureID, 0.0f / 1024.0f, 78.0f / 1024.0f, 222.0f / 1024.0f, 39.0f / 1024.0f, 0.5f);
@@ -216,11 +219,12 @@ void ClassDemoApp::buildLevel(){
 	platform.isStatic = true;
 	platform.entityType = TYPE_LEVEL;
 	entities.push_back(platform);
+	*/
 
-	/* tiled level
+	// tiled level
 	unsigned char level1Data[LEVEL_HEIGHT][LEVEL_WIDTH] =
 	{
-		{ 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11 },
+		{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
 		{ 0, 20, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 20, 0 },
 		{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
 		{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
@@ -233,31 +237,46 @@ void ClassDemoApp::buildLevel(){
 		{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
 		{ 0, 20, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6, 6, 6, 0, 0, 0, 0, 0, 20, 0 },
 		{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
-		{ 0, 20, 125, 118, 0, 0, 116, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 117, 0, 127, 20, 0 },
+		{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
 		{ 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2 },
 		{ 32, 33, 33, 34, 32, 33, 33, 34, 33, 35, 100, 101, 35, 32, 33, 32, 34, 32, 33, 32, 33, 33 }
 	};
 	memcpy(levelData, level1Data, LEVEL_HEIGHT*LEVEL_WIDTH);
 
+	int nonEmptySprites = 0;
+
 	std::vector<float> vertexData;
 	std::vector<float> texCoordData;
 	for (int y = 0; y < LEVEL_HEIGHT; y++) {
 		for (int x = 0; x < LEVEL_WIDTH; x++) {
-			if (levelData[y][x] != 0){
-				float u = (float)(((int)levelData[y][x]) % SPRITE_COUNT_X) / (float)SPRITE_COUNT_X; float v = (float)(((int)levelData[y][x]) / SPRITE_COUNT_X) / (float)SPRITE_COUNT_Y;
-				float spriteWidth = 1.0f / (float)SPRITE_COUNT_X; float spriteHeight = 1.0f / (float)SPRITE_COUNT_Y;
+			//if (levelData[y][x] != 0){
+				float u = (float)(((int)levelData[y][x]) % SPRITE_COUNT_X) / (float)SPRITE_COUNT_X;
+				float v = (float)(((int)levelData[y][x]) / SPRITE_COUNT_X) / (float)SPRITE_COUNT_Y;
+				float spriteWidth = 1.0f / (float)SPRITE_COUNT_X;
+				float spriteHeight = 1.0f / (float)SPRITE_COUNT_Y;
 				vertexData.insert(vertexData.end(), {
-					TILE_SIZE * x, -TILE_SIZE * y, TILE_SIZE * x, (-TILE_SIZE * y) - TILE_SIZE, (TILE_SIZE * x) + TILE_SIZE, (-TILE_SIZE * y) - TILE_SIZE,
-					TILE_SIZE * x, -TILE_SIZE * y, (TILE_SIZE * x) + TILE_SIZE, (-TILE_SIZE * y) - TILE_SIZE, (TILE_SIZE * x) + TILE_SIZE, -TILE_SIZE * y
+					(float)TILE_SIZE * x, (float)-TILE_SIZE * y, (float)TILE_SIZE * x, (float)(-TILE_SIZE * y) - TILE_SIZE, (float)(TILE_SIZE * x) + TILE_SIZE, (float)(-TILE_SIZE * y) - TILE_SIZE,
+					(float)TILE_SIZE * x, (float)-TILE_SIZE * y, (float)(TILE_SIZE * x) + TILE_SIZE, (float)(-TILE_SIZE * y) - TILE_SIZE, (float)(TILE_SIZE * x) + TILE_SIZE, (float)-TILE_SIZE * y
 				});
 				texCoordData.insert(texCoordData.end(), { u, v,
 					u, v + (spriteHeight),
 					u + spriteWidth, v + (spriteHeight), u, v,
 					u + spriteWidth, v + (spriteHeight), u + spriteWidth, v
 				});
-			}
+				nonEmptySprites++;
+			//}
 		}
-	}*/
+	}
+	glUseProgram(program->programID);
+	glVertexAttribPointer(program->positionAttribute, 2, GL_FLOAT, false, 0, vertexData.data());
+	glEnableVertexAttribArray(program->positionAttribute);
+	glVertexAttribPointer(program->texCoordAttribute, 2, GL_FLOAT, false, 0, texCoordData.data());
+	glEnableVertexAttribArray(program->texCoordAttribute);
+	glBindTexture(GL_TEXTURE_2D, LevelTexture);
+	glDrawArrays(GL_TRIANGLES, 0, nonEmptySprites * 6);
+
+	glDisableVertexAttribArray(program->positionAttribute);
+	glDisableVertexAttribArray(program->texCoordAttribute);
 }
 void ClassDemoApp::titleScreenRender(){
 	modelMatrix.identity();
@@ -269,6 +288,11 @@ void ClassDemoApp::titleScreenRender(){
 	DrawText(LoadTexture(RESOURCE_FOLDER"font1.png"), "Platformer", 0.3f, 0.0f);
 }
 void ClassDemoApp::gameRender(){
+	modelMatrix.identity();
+	//modelMatrix.Translate(-4.0f, 3.0f, 0.0f);
+	program->setModelMatrix(modelMatrix);
+	buildLevel();
+
 	for (int i = 0; i < entities.size(); i++){
 		// Pass shaderprogram and call entity renders
 		entities[i].Render(program);
@@ -276,6 +300,10 @@ void ClassDemoApp::gameRender(){
 	for (int i = 0; i < bullets.size(); i++){
 		bullets[i].Render(program);
 	}
+
+	// Screen Scrolling
+	viewMatrix.setPosition(-entities[0].x, -entities[0].y, 0);
+	program->setViewMatrix(viewMatrix);
 }
 void ClassDemoApp::gameOverRender(){
 	modelMatrix.identity();
@@ -322,7 +350,6 @@ void ClassDemoApp::ProcessEvents() {
 					entities.clear();
 					SpawnPlayer();
 				//	SpawnEnemies();
-					buildLevel();
 				}
 			}
 			break; 
@@ -412,13 +439,47 @@ void ClassDemoApp::ProcessEvents() {
 }
 void ClassDemoApp::titleScreenUpdate(){
 }
+bool ClassDemoApp::isSolid(int x, int y){
+	int tile = (int)levelData[y][x];
+	switch (tile){
+	case (2) :
+	case (4) :
+	case (6) :
+	case (20):
+			 return true;
+		break;
+	default:
+		return false;
+	}
+}
+void ClassDemoApp::worldToTileCoordinates(float worldX, float worldY, int *gridX, int *gridY) {
+	*gridX = (int)(worldX / TILE_SIZE);
+	*gridY = (int)(-worldY / TILE_SIZE);
+}
+void ClassDemoApp::worldCollisions(Entity * entity){
+	int tile_x;
+	int tile_y;
+	worldToTileCoordinates(entity->x, entity->y - entity->height / 2, &tile_x, &tile_y);
+	if (-TILE_SIZE * tile_y > entity->y - entity->height / 2){
+		if (isSolid(tile_x, tile_y)){
+			entity->y += fabs((-TILE_SIZE * tile_y) - (entity->y - entity->height / 2) + 0.01f);
+			entity->velocity_y = 0.0f;
+			entity->collidedBottom = true;
+		}
+	}
+	// COPY FOR TOP, LEFT AND RIGHT
+
+	//is bottom of entity intersecting with a tile
+	// -TILE_SIZE * tile_y > entity.y - entity.height/2
+	// if intersecting, check if tile is solid
+	// if solid, adjust Y coordinate by:
+	// (-TILE_SIZE * tile_y) -  (entity.y - entity.height/2) + a little
+	// reset velocity to 0
+	// set collision flag
+
+}
 //gameUpdate is passed FixedTimeStep as elapsed
 void ClassDemoApp::gameUpdate(float elapsed){
-	// WIP Screen Scrolling
-	/*viewMatrix.Translate(entities[0].modelMatrix.inverse);
-	program->setViewMatrix(viewMatrix);
-	*/
-
 	// move things based on time passed
 	// check for collisions and respond to them
 
@@ -446,6 +507,8 @@ void ClassDemoApp::gameUpdate(float elapsed){
 		}
 		else {
 			entities[i].Update(elapsed, entities);
+			worldCollisions(&(entities[i]));
+			
 		}
 	}
 	//Controller support
