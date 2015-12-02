@@ -118,7 +118,7 @@ void ClassDemoApp::Setup(){
 
 	textureID = LoadTexture(RESOURCE_FOLDER"sheet.png");
 	LevelTexture = LoadTexture(RESOURCE_FOLDER"tiles_spritesheet.png");
-
+	
 	state = STATE_TITLE_SCREEN;
 	score = 0;
 	numEnemies = 5;
@@ -203,7 +203,104 @@ void ClassDemoApp::DrawText(int fontTexture, std::string text, float size, float
 	glDisableVertexAttribArray(program->positionAttribute);
 	glDisableVertexAttribArray(program->texCoordAttribute);
 }
-void ClassDemoApp::buildLevel(){
+bool ClassDemoApp::readHeader(std::ifstream &stream) {
+	string line;
+	mapWidth = -1;
+	mapHeight = -1;
+	while (getline(stream, line)) {
+		if (line == "") { break; }
+		istringstream sStream(line);
+		string key, value;
+		getline(sStream, key, '='); 
+		getline(sStream, value);
+		if (key == "width") {
+			mapWidth = atoi(value.c_str());
+		}
+		else if (key == "height"){
+			mapHeight = atoi(value.c_str());
+		}
+	}
+	if (mapWidth == -1 || mapHeight == -1) {
+		return false;
+	}
+	else { // allocate our map data
+		levelData = new unsigned char*[mapHeight];
+		for (int i = 0; i < mapHeight; ++i) {
+			levelData[i] = new unsigned char[mapWidth];
+		}
+		return true;
+	}
+} 
+bool ClassDemoApp::readLayerData(std::ifstream &stream) {
+	string line; 
+	while (getline(stream, line)) {
+		if (line == "") { break; } 
+		istringstream sStream(line); 
+		string key, value; 
+		getline(sStream, key, '='); 
+		getline(sStream, value); 
+		if (key == "data") {
+			for (int y = 0; y < mapHeight; y++) {
+				getline(stream, line); 
+				istringstream lineStream(line); 
+				string tile;
+				for (int x = 0; x < mapWidth; x++) {
+					getline(lineStream, tile, ','); 
+					unsigned char val = (unsigned char)atoi(tile.c_str()); 
+					if (val > 0) {
+						// be careful, the tiles in this format are indexed from 1 not 0 
+						levelData[y][x] = val-1;
+					}
+					else { 
+						levelData[y][x] = 0; 
+					}
+				}
+			}
+		}
+	} 
+	return true;
+}
+bool ClassDemoApp::readEntityData(std::ifstream &stream) {
+	string line;
+	string type;
+	while (getline(stream, line)) {
+		if (line == "") { break; }
+		istringstream sStream(line); 
+		string key, value; 
+		getline(sStream, key, '='); 
+		getline(sStream, value);
+		if (key == "type") {
+			type = value;
+		}
+		else if (key == "location") {
+			istringstream lineStream(value);
+			string xPosition, yPosition; 
+			getline(lineStream, xPosition, ','); 
+			getline(lineStream, yPosition, ',');
+			float placeX = atoi(xPosition.c_str()) / 16 * TILE_SIZE;
+			float placeY = atoi(yPosition.c_str()) / 16 * -TILE_SIZE;
+		//placeEntity(type, placeX, placeY);
+		}
+	} 
+	return true;
+}
+
+void ClassDemoApp::loadLevelData(){
+	ifstream infile("level1.txt");
+	string line;
+	while (getline(infile, line)){
+		if (line == "[header]") {
+			if (!readHeader(infile)) {
+				return;
+			}
+		}
+		else if (line == "[layer]") {
+			readLayerData(infile);
+		}
+		else if (line == "[ObjectsLayer]") {
+			readEntityData(infile);
+		}
+	}
 	/* Static / Dynamic Level
 	Entity platform;
 	//<SubTexture height="39" width="222" y="78" x="0" name="buttonBlue.png"/>
@@ -221,34 +318,39 @@ void ClassDemoApp::buildLevel(){
 	entities.push_back(platform);
 	*/
 
-	// tiled level
+	/* example tile level
 	unsigned char level1Data[LEVEL_HEIGHT][LEVEL_WIDTH] =
 	{
-		{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
-		{ 0, 20, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 20, 0 },
-		{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
-		{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
-		{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
-		{ 0, 20, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6, 6, 6, 0, 0, 0, 0, 0, 20, 0 },
-		{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
-		{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
-		{ 0, 20, 6, 6, 6, 6, 6, 0, 0, 0, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 20, 0 },
-		{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
-		{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
-		{ 0, 20, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6, 6, 6, 0, 0, 0, 0, 0, 20, 0 },
-		{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
-		{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
-		{ 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2 },
-		{ 32, 33, 33, 34, 32, 33, 33, 34, 33, 35, 100, 101, 35, 32, 33, 32, 34, 32, 33, 32, 33, 33 }
+	{ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 },
+	{ 0, 20, 4, 4, 4, 4, 4, 4, 0, 0, 0, 0, 0, 0, 4, 4, 4, 4, 4, 4, 20, 0 },
+	{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
+	{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
+	{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
+	{ 0, 20, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6, 6, 6, 0, 0, 0, 0, 0, 20, 0 },
+	{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
+	{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
+	{ 0, 20, 6, 6, 6, 6, 6, 0, 0, 0, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 20, 0 },
+	{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
+	{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
+	{ 0, 20, 0, 0, 0, 0, 0, 6, 6, 6, 6, 6, 6, 6, 6, 0, 0, 0, 0, 0, 20, 0 },
+	{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
+	{ 0, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 20, 0 },
+	{ 2, 2, 2, 2, 2, 2, 2, 2, 2, 3, 0, 0, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2 },
+	{ 32, 33, 33, 34, 32, 33, 33, 34, 33, 35, 100, 101, 35, 32, 33, 32, 34, 32, 33, 32, 33, 33 }
 	};
-	memcpy(levelData, level1Data, LEVEL_HEIGHT*LEVEL_WIDTH);
 
+	memcpy(levelData, level1Data, LEVEL_HEIGHT*LEVEL_WIDTH);
+	*/
+}
+
+void ClassDemoApp::buildLevel(){
+		
 	int nonEmptySprites = 0;
 
 	std::vector<float> vertexData;
 	std::vector<float> texCoordData;
-	for (int y = 0; y < LEVEL_HEIGHT; y++) {
-		for (int x = 0; x < LEVEL_WIDTH; x++) {
+	for (int y = 0; y < mapHeight; y++) {
+		for (int x = 0; x < mapWidth; x++) {
 			//if (levelData[y][x] != 0){
 				float u = (float)(((int)levelData[y][x]) % SPRITE_COUNT_X) / (float)SPRITE_COUNT_X;
 				float v = (float)(((int)levelData[y][x]) / SPRITE_COUNT_X) / (float)SPRITE_COUNT_Y;
@@ -440,17 +542,16 @@ void ClassDemoApp::ProcessEvents() {
 void ClassDemoApp::titleScreenUpdate(){
 }
 bool ClassDemoApp::isSolid(int x, int y){
-	int tile = (int)levelData[y][x];
-	switch (tile){
-	case (2) :
-	case (4) :
-	case (6) :
-	case (20):
+	switch (levelData[y][x]){
+	case (103) :
+	case (104) :
+	case (128) :
+	case (132) :
+	case (152) :
 			 return true;
 		break;
-	default:
-		return false;
 	}
+	return false;
 }
 void ClassDemoApp::worldToTileCoordinates(float worldX, float worldY, int *gridX, int *gridY) {
 	*gridX = (int)(worldX / TILE_SIZE);
@@ -534,6 +635,7 @@ void ClassDemoApp::Update(float elapsed) {
 		titleScreenUpdate();
 		break;
 	case STATE_GAME_LEVEL:
+		loadLevelData();
 		gameUpdate(FIXED_TIMESTEP);
 		break;
 	case STATE_GAME_OVER:

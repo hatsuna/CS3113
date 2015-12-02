@@ -9,6 +9,10 @@
 #include <SDL_image.h>
 #include <vector>
 #include <algorithm>
+#include <fstream> 
+#include <string> 
+#include <iostream> 
+#include <sstream>
 
 #include "ShaderProgram.h"
 #include "Matrix.h"
@@ -36,6 +40,8 @@
 
 #define TILE_SIZE 0.5f
 
+using namespace std;
+
 enum GameState { STATE_TITLE_SCREEN, STATE_GAME_LEVEL, STATE_GAME_OVER };
 
 class ClassDemoApp {
@@ -52,6 +58,11 @@ class ClassDemoApp {
 		void shootBullet();
 		bool shouldRemoveBullet(Bullet bullet);
 		void DrawText(int fontTexture, std::string text, float size, float spacing);
+		
+		bool readHeader(std::ifstream &stream);
+		bool readLayerData(std::ifstream &stream);
+		bool readEntityData(std::ifstream &stream);
+		void loadLevelData();
 		void buildLevel();
 		bool isSolid(int x, int y);
 		void worldToTileCoordinates(float worldX, float worldY, int *gridX, int *gridY);
@@ -89,12 +100,15 @@ class ClassDemoApp {
 		GLuint textureID;
 		GLuint LevelTexture;
 
+		int mapWidth;
+		int mapHeight;
+
 		int numEnemies;
 
 		std::vector<Entity> entities;
 		std::vector<Bullet> bullets;
 
-		unsigned char levelData[LEVEL_HEIGHT][LEVEL_WIDTH];
+		unsigned char** levelData;
 				
 		float xDir;
 		float yDir;
