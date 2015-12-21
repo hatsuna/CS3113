@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.0" orientation="orthogonal" renderorder="right-down" width="128" height="32" tilewidth="72" tileheight="72" nextobjectid="1">
+ <tileset firstgid="1" name="mysprites" tilewidth="72" tileheight="72" tilecount="156">
+  <image source="tiles_spritesheet.png" width="914" height="936"/>
+ </tileset>
+ <layer name="Tile Layer 1" width="128" height="32">
+  <data encoding="base64" compression="zlib">
+   eJzt0bEJgDAQhtEMdHuptRNYZAi3VeGKdAYsJOE9+IrrDv5SAAAAAAAAAAAAAAAAAICRHHdrR9tfD/LZktWm596zsyPGFVm7fzTZf27xkv3ndgGE4Rwr
+  </data>
+ </layer>
+</map>

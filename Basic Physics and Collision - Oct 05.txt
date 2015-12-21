@@ -1,0 +1,68 @@
+Basic Physics and Collision - Oct 05
+
+// Linear Interpolation
+float lerp(float v0, float v1, float t){
+	return (1.0-t) * v0 + t * v1;
+} 
+
+
+// Adjusted Physics
+// Should remove jittery movement
+velocity_x = lerp(velocity_x, 0.0f, FIXED_TIMESTEP * friction_x);
+velocity_y = lerp(velocity_y, 0.0f, FIXED_TIMESTEP * friction_y);
+
+velocity_x += acceleration_x * FIXED_TIMESTEP;
+velocity_y += acceleration_y * FIXED_TIMESTEP;
+
+x += velocity_x * FIXED_TIMESTEP;
+y += velocity_y * FIXED_TIMESTEP;
+
+// First check collision on all axis
+// if Collided, check axis penetration
+// Penetration Testing
+
+penetration = fabs(y_distance - height1/2 - height2/2)
+// move on axis of penetration
+// to uncollide objects
+
+penetration = fabs(x_distance - width1/2 - width2/2)
+
+// Gravity - constant acceleration downwards
+
+velocity_x += gravity_x * elapsed;
+velocity_x += gravity_y * elapsed;
+
+Platformer Games - Oct 07
+
+//Update & clean up Entity class
+bool collidesWith(Entity *entity);
+
+// Dynamic - gravity applied and collision with other entities checked
+// Static - no gravity, no movement, no collision checking
+bool isStatic;
+
+
+// Contact Flags - set based on collision direction
+// otherwise, set false during every frame
+bool collidedTop;
+bool collidedBottom;
+bool collidedLeft;
+bool collidedRight;
+
+
+************ ^ Implemented  *******************
+
+// Uses
+	// only allow jump when bottom contact flag is true
+	// turning NPC entities around when they hit a wall
+		// reverse x_acceleration 
+
+
+Building Worlds - Oct 13 & 14th
+
+
+Assignment
+- Make a simple scolling platformer game demo
+- It must use a tilemap or static/dynamic entities
+- It must scroll
+- It must be either procedurally generated or load levels from a file

@@ -1,0 +1,83 @@
+Matrices
+
+Inverse of a Matrix
+	Scaled by 1/scale
+	Rotated by the transpose of the rotation
+	translated by the translation * -1
+
+
+Shaders - GLSL
+
+Simple glsl vertex shader: vertex_shader.glsl
+
+// vertex attribute data coming from c++
+// single entries in vertex array
+attribute vec4 position;
+attribute vec4 texCoord;
+
+// 
+uniform mat4 modelMatrix;
+uniform mat4 viewMatrix;
+uniform mat4 projectionMatrix;
+
+// shared between the vertex shader and the fragment shader
+varying vec2 texCoordVar;
+
+void main(){
+	// create new variable
+	vec4 p = viewMatrix * modelMatrix * position; 
+	
+	texCoordVar = texCoord;
+	// usually multiplied by projection matrix at the end, outputting to screen
+	gl_Position = projectionMatrix * p;	
+
+
+}
+
+simple fragment shader: fragment_shader.glsl
+
+uniform sampler2D diffuse; // texture thats coming in from C++
+
+varying vec2 texCoordVar:
+
+void main(){
+// setting final color to sample of texture at a specific position
+	gl_FragColor = texture2D(diffuse, texCoordVar);
+
+}
+
+Using Shaders in OpenGL
+
+std::ifstream infile("vertex_shader.frag");
+if(infile.fail()){
+	std::cout << "Error ..." << std::endl;
+}
+std::....
+
+//use GL_Vertex_shader for vertex shader
+
+GLuint vertexShaderID = glCreateShader(GL_VERTEX_SHADER);
+
+const char *vertexShaderSting = vertexShader.c_str();
+int vertexShaderStringLength = vertexShader.size();
+
+glShaderSource(......);
+glComplieShader(....);
+
+//Crating and linking the shader program from the fragment 
+
+...
+
+
+// i fell asleep here
+
+// Bind shader attributes
+
+//Catching GLSL
+GLint compileSuccess;
+glGetShaderiv(...);
+if (compileSuccess == GL_FALSE){
+	
+	...
+}
+
